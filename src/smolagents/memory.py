@@ -87,6 +87,7 @@ class ActionStep(MemoryStep):
             "action_output": make_json_serializable(self.action_output),
             "token_usage": asdict(self.token_usage) if self.token_usage else None,
             "is_final_answer": self.is_final_answer,
+            "insights": getattr(self, 'insights', None),
         }
 
     def to_messages(self, summary_mode: bool = False) -> list[ChatMessage]:
@@ -204,6 +205,14 @@ class SystemPromptStep(MemoryStep):
         if summary_mode:
             return []
         return [ChatMessage(role=MessageRole.SYSTEM, content=[{"type": "text", "text": self.system_prompt}])]
+
+
+@dataclass
+class UserPromptStep(MemoryStep):
+    prompt: str
+    
+    def to_messages(self, summary_mode: bool = False) -> list[ChatMessage]:
+        return [ChatMessage(role=MessageRole.USER, content=[{"type": "text", "text": self.prompt}])]
 
 
 @dataclass

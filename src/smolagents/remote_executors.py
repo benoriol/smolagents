@@ -372,7 +372,7 @@ class DockerExecutor(RemotePythonExecutor):
             self.kernel_id = r.json()["id"]
 
             ws_url = f"ws://{host}:{port}/api/kernels/{self.kernel_id}/channels"
-            self.ws = create_connection(ws_url)
+            self.ws = create_connection(ws_url, ping_interval=20, ping_timeout=60)
 
             self.installed_packages = self.install_packages(additional_imports)
             self.logger.log(

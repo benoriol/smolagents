@@ -1707,6 +1707,11 @@ class CodeAgent(MultiStepAgent):
         memory_step.tool_calls = [tool_call]
 
         ### Execute action ###
+        # Sanity check: make sure we are not overriding final_answer()
+        if "def final_answer" in code_action:
+            error_msg = "Error: Do not create a function called final_answer(). This function already exists and it is prohibited to define again."
+            raise AgentExecutionError(error_msg, self.logger)
+        
         self.logger.log_code(title="Executing parsed code:", content=code_action, level=LogLevel.INFO)
         try:
             code_output = self.python_executor(code_action)
@@ -1735,14 +1740,14 @@ class CodeAgent(MultiStepAgent):
                 )
             raise AgentExecutionError(error_msg, self.logger)
 
-        truncated_output = truncate_content(str(code_output.output))
-        observation += "Last output from code snippet:\n" + truncated_output
+        full_output = str(code_output.output)
+        observation += "Last output from code snippet:\n" + full_output
         memory_step.observations = observation
 
         if not code_output.is_final_answer:
             execution_outputs_console += [
                 Text(
-                    f"Out: {truncated_output}",
+                    f"Out: {full_output}",
                 ),
             ]
         self.logger.log(Group(*execution_outputs_console), level=LogLevel.INFO)
