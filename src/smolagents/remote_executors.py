@@ -464,6 +464,15 @@ class DockerExecutor(RemotePythonExecutor):
             raise RuntimeError(f"Failed to initialize Jupyter kernel: {e}") from e
 
     def run_code_raise_errors(self, code: str) -> CodeOutput:
+        # Check if connection is still alive, reconnect if needed
+        try:
+            self.ws.ping()
+        except:
+            # Reconnect
+            from websocket import create_connection
+            ws_url = f"ws://{self.host}:{self.port}/api/kernels/{self.kernel_id}/channels"
+            self.ws = create_connection(ws_url, ping_interval=20, ping_timeout=60)
+        
         return _websocket_run_code_raise_errors(code, self.ws, self.logger)
 
     def cleanup(self):
